@@ -29,7 +29,7 @@ import { formatText } from "../show/formatTextEditor"
 import { getPlainEditorText } from "../show/getTextEditor"
 import { pauseTimeline, setTimelineTime, startTimeline, stopTimeline } from "../timeline/TimelinePlayback"
 import { runActionByName, runActionId, toggleAction } from "./actions"
-import { getActions, getOutput, getOutputGroupName, getOutputSlideText, getPlayingAudioData, getPlayingAudioDuration, getPlayingAudioTime, getPlayingPlaylist, getPlayingVideoDuration, getPlayingVideoState, getPlayingVideoTime, getPlaylists, getProject, getProjects, getShow, getShowLayout, getShows, getSlide, getVariable, getVariables } from "./apiGet"
+import { getActions, getCurrentSlide, getOutput, getOutputGroupName, getOutputSlideText, getPlayingAudioData, getPlayingAudioDuration, getPlayingAudioTime, getPlayingPlaylist, getPlayingVideoDuration, getPlayingVideoState, getPlayingVideoTime, getPlaylists, getProject, getProjects, getShow, getShowLayout, getShows, getSlide, getVariable, getVariables } from "./apiGet"
 import {
     addGroup,
     addToProject,
@@ -411,6 +411,7 @@ export const API_ACTIONS = {
     get_output: (data: API_id_optional) => getOutput(data),
     get_output_slide_text: () => getOutputSlideText(),
     get_output_group_name: () => getOutputGroupName(),
+    get_current_slide: (data: API_id_optional) => getCurrentSlide(data),
     get_dynamic_value: (data: API_dynamic_value) => replaceDynamicValues(data.value, data.ref || {}),
 
     get_playing_video_duration: () => getPlayingVideoDuration(),

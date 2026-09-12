@@ -52,6 +52,37 @@ export function getOutputGroupName() {
     return slide?.group || ""
 }
 
+// returns a normalized snapshot of the currently active slide, including its stable per-slide UUID (slideId),
+// so external tools can identify "which slide" independently of its position/index in the layout
+export function getCurrentSlideData(outputId?: string) {
+    const output = outputId ? { ...(get(outputs)[outputId] || {}), id: outputId } : getFirstActiveOutput()
+    const resolvedOutputId = output?.id || outputId || null
+    const outputSlide = output?.out?.slide || null
+
+    if (!outputSlide) {
+        return { outputId: resolvedOutputId, showId: null, layoutId: null, index: null, slideId: null, group: "", text: "", slide: null }
+    }
+
+    const layoutRef = _show(outputSlide.id).layouts([outputSlide.layout]).ref()[0] || []
+    const slideId = layoutRef[outputSlide.index ?? -1]?.id || null
+    const slide = slideId ? _show(outputSlide.id).get("slides")?.[slideId] || null : null
+
+    return {
+        outputId: resolvedOutputId,
+        showId: outputSlide.id || null,
+        layoutId: outputSlide.layout || null,
+        index: outputSlide.index ?? null,
+        slideId,
+        group: slide?.group || "",
+        text: slide ? getTextLines(slide).join("\n") : "",
+        slide
+    }
+}
+
+export function getCurrentSlide(data: API_id_optional) {
+    return getCurrentSlideData(data?.id)
+}
+
 export function getPlayingVideoDuration() {
     const outputPath = getFirstActiveOutput()?.out?.background?.path || ""
     const video = get(playingVideos).find((a) => a.path === outputPath)

@@ -1,10 +1,13 @@
 import { get } from "svelte/store"
 import { OUTPUT, REMOTE, STAGE } from "../../types/Channels"
+import { Main } from "../../types/IPC/Main"
 import { AudioPlayer } from "../audio/audioPlayer"
+import { getCurrentSlideData } from "../components/actions/apiGet"
 import { midiInListen } from "../components/actions/midi"
 import { getAllActiveOutputIds, getAllNormalOutputs, updateSyncedOutputs } from "../components/helpers/output"
 import { loadShows } from "../components/helpers/setShow"
 import { getShowCacheId, syncCachedShows, updateCachedShow, updateCachedShows, updateShowsList } from "../components/helpers/show"
+import { sendMain } from "../IPC/main"
 import {
     $,
     actions,
@@ -71,6 +74,7 @@ import { send } from "./request"
 import { arrayToObject, eachConnection, filterObjectArray, sendData, timedout } from "./sendData"
 
 export function storeSubscriber() {
+    const lastBroadcastSlideKey: { [outputId: string]: string } = {}
     shows.subscribe(async (data) => {
         if (await hasNewerUpdate("LISTENER_SHOWS", 800)) return
 
@@ -215,6 +219,20 @@ export function storeSubscriber() {
     })
     syncedOutputs.subscribe((data) => {
         send(OUTPUT, ["SYNCED_OUTPUTS"], data)
+    })
+    // push the active slide (with its stable per-slide id) to any connected WebSocket API clients whenever it changes,
+    // so external automation tools don't have to poll for the current slide
+    outputs.subscribe(async (data) => {
+        if (await hasNewerUpdate("LISTENER_API_CURRENT_SLIDE", 1)) return
+
+        Object.keys(data).forEach((outputId) => {
+            const outputSlide = data[outputId]?.out?.slide || null
+            const key = outputSlide ? `${outputSlide.id || ""}_${outputSlide.layout || ""}_${outputSlide.index ?? ""}` : ""
+            if (lastBroadcastSlideKey[outputId] === key) return
+            lastBroadcastSlideKey[outputId] = key
+
+            sendMain(Main.API_BROADCAST, { event: "slide", data: getCurrentSlideData(outputId) })
+        })
     })
     styles.subscribe((data) => {
         send(OUTPUT, ["STYLES"], data)

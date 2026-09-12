@@ -66,6 +66,19 @@ function startWebSocket(PORT: number) {
     ioServer.on("connection", connected)
 }
 
+// PUSH NOTIFICATIONS
+// Unlike the request/response "data" event, this proactively pushes messages to all connected WebSocket
+// clients whenever something changes on the frontend (e.g. the active slide), without them having to poll.
+export function broadcastApiData(event: string, data: any) {
+    if (!ioServer) return
+
+    try {
+        ioServer.emit("push", { action: event, data })
+    } catch (err) {
+        console.error(`Error broadcasting ${event}:`, err)
+    }
+}
+
 function connected(socket: Socket) {
     log("Client connected.")
     sendToMain(ToMain.WEBSOCKET, "connected")
