@@ -1,10 +1,13 @@
 import { get } from "svelte/store"
 import { OUTPUT, REMOTE, STAGE } from "../../types/Channels"
+import { Main } from "../../types/IPC/Main"
 import { AudioPlayer } from "../audio/audioPlayer"
+import { getCurrentSlideData } from "../components/actions/apiGet"
 import { midiInListen } from "../components/actions/midi"
 import { getAllActiveOutputIds, getAllNormalOutputs } from "../components/helpers/output"
 import { loadShows } from "../components/helpers/setShow"
 import { getShowCacheId, updateCachedShow, updateCachedShows, updateShowsList } from "../components/helpers/show"
+import { sendMain } from "../IPC/main"
 import {
     $,
     actions,
@@ -104,6 +107,7 @@ function copyShowsMetadata(data: any): any {
 
 export function storeSubscriber() {
     let lastShowsData: any = {}
+    const lastBroadcastSlideKey: { [outputId: string]: string } = {}
     shows.subscribe(async (data) => {
         if (await hasNewerUpdate("LISTENER_SHOWS", 200)) return
 
@@ -243,6 +247,20 @@ export function storeSubscriber() {
         // sendData(STAGE, { channel: "SLIDES" }, true)
         // send(STAGE, ["OUTPUTS"], data)
         // sendBackgroundToStage(a)
+    })
+    // push the active slide (with its stable per-slide id) to any connected WebSocket API clients whenever it changes,
+    // so external automation tools don't have to poll for the current slide
+    outputs.subscribe(async (data) => {
+        if (await hasNewerUpdate("LISTENER_API_CURRENT_SLIDE", 1)) return
+
+        Object.keys(data).forEach((outputId) => {
+            const outputSlide = data[outputId]?.out?.slide || null
+            const key = outputSlide ? `${outputSlide.id || ""}_${outputSlide.layout || ""}_${outputSlide.index ?? ""}` : ""
+            if (lastBroadcastSlideKey[outputId] === key) return
+            lastBroadcastSlideKey[outputId] = key
+
+            sendMain(Main.API_BROADCAST, { event: "slide", data: getCurrentSlideData(outputId) })
+        })
     })
     styles.subscribe((data) => {
         send(OUTPUT, ["STYLES"], data)

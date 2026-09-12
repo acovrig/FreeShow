@@ -11,6 +11,7 @@ import { waitUntilValueIsDefined } from "./helpers"
 const app = express()
 const servers: { [key: string]: http.Server | OSC } = {}
 const DEFAULT_PORTS = { WebSocket: 5505, REST: 5506 }
+let io: Server | null = null
 
 // WebSocket on 5506, REST on +1 (5506), but works with 5505 as well!
 export function startWebSocketAndRest(port: number | undefined) {
@@ -33,8 +34,21 @@ function startWebSocket(PORT: number) {
         if ((err as any).code === "EADDRINUSE") server.close()
     })
 
-    const io = new Server(server)
+    io = new Server(server)
     io.on("connection", connected)
+}
+
+// PUSH NOTIFICATIONS
+// Unlike the request/response "data" event, this proactively pushes messages to all connected WebSocket
+// clients whenever something changes on the frontend (e.g. the active slide), without them having to poll.
+export function broadcastApiData(event: string, data: any) {
+    if (!io) return
+
+    try {
+        io.emit("push", { action: event, data })
+    } catch (err) {
+        console.error(`Error broadcasting ${event}:`, err)
+    }
 }
 
 function connected(socket: Socket) {
@@ -245,6 +259,7 @@ export function stopApiListener(specificId = "") {
                 servers[id].close()
                 delete servers[id]
             }
+            if (id === "WebSocket") io = null
         } catch (err) {
             console.error(`${id}: Error closing server:`, err)
         }

@@ -33,7 +33,7 @@ import { closeServers, startServers, updateServerData } from "../servers"
 import { detectEncoders, setRtmpEncoderSetting } from "../streaming/encoderDetection"
 import { downloadFfmpeg, resolveFfmpegPath } from "../streaming/ffmpegManager"
 import { processAudioData, timecodeStart, timecodeStop, updateTimecodeValue } from "../timecode/timecode"
-import { apiReturnData, emitOSC, startWebSocketAndRest, stopApiListener } from "../utils/api"
+import { apiReturnData, broadcastApiData, emitOSC, startWebSocketAndRest, stopApiListener } from "../utils/api"
 import { closeMain } from "../utils/close"
 import { addToMediaFolder, bundleMediaFiles, createFolder, getDataFolderPath, getDataFolderRoot, getFileInfo, getMediaCodec, getMediaSyncFolderPath, getMediaTracks, getPaths, getSimularPaths, loadFile, loadShowsAsync, locateMediaFile, openInSystem, readExifData, readFile, readFolder, readFolderContent, selectFiles, selectFilesDialog, selectFolder, setMediaSyncFolderPath, writeFile } from "../utils/files"
 import { listGraphicsDevices } from "../utils/gpu"
@@ -151,6 +151,7 @@ export const mainResponses: MainResponses = {
     [Main.WEBSOCKET_START]: (port) => startWebSocketAndRest(port),
     [Main.WEBSOCKET_STOP]: () => stopApiListener(),
     [Main.API_TRIGGER]: (data) => apiReturnData(data),
+    [Main.API_BROADCAST]: (data) => broadcastApiData(data.event, data.data),
     [Main.EMIT_OSC]: (data) => emitOSC(data),
     // MIDI
     [Main.GET_MIDI_OUTPUTS]: () => getMidiOutputs(),

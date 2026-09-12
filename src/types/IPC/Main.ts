@@ -119,6 +119,7 @@ export enum Main {
     WEBSOCKET_START = "WEBSOCKET_START",
     WEBSOCKET_STOP = "WEBSOCKET_STOP",
     API_TRIGGER = "API_TRIGGER",
+    API_BROADCAST = "API_BROADCAST",
     EMIT_OSC = "EMIT_OSC",
     GET_MIDI_OUTPUTS = "GET_MIDI_OUTPUTS",
     GET_MIDI_INPUTS = "GET_MIDI_INPUTS",
@@ -240,6 +241,7 @@ export interface MainSendPayloads {
     [Main.SERVER_DATA]: { [key: string]: any }
     [Main.WEBSOCKET_START]: number
     [Main.API_TRIGGER]: { action: string; returnId: string; data: any }
+    [Main.API_BROADCAST]: { event: string; data: any }
     [Main.EMIT_OSC]: { signal: any; data: any }
     [Main.GET_MIDI_OUTPUTS]: string[]
     [Main.GET_MIDI_INPUTS]: string[]
