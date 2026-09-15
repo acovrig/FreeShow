@@ -69,6 +69,7 @@ import {
     selectShowByName,
     selectSlideByIndex,
     selectSlideByName,
+    setItemText,
     setNextSlideTimer,
     setShowAPI,
     setTemplate,
@@ -136,6 +137,7 @@ export type API_id_value = { id: string; value: string }
 export type API_rearrange = { showId: string; from: number; to: number }
 export type API_group = { showId: string; groupId: string }
 export type API_layout = { showId: string; layoutId: string }
+export type API_set_item_text = { showId?: string; slideId?: string; layoutId?: string; index?: number; itemIndex?: number; value: string }
 export type API_slide_thumbnail = { showId?: string; layoutId?: string; index?: number }
 export type API_seek = { id?: string; seconds: number }
 export type API_media = { path: string; index?: number; data?: any }
@@ -228,6 +230,7 @@ export const API_ACTIONS = {
     change_layout: (data: API_layout) => changeShowLayout(data),
     set_plain_text: (data: API_id_value) => formatText(data.value, data.id),
     set_show: (data: API_id_value) => setShowAPI(data.id, data.value),
+    set_item_text: (data: API_set_item_text) => setItemText(data),
     rearrange_groups: (data: API_rearrange) => rearrangeGroups(data),
     add_group: (data: API_group) => addGroup(data),
     set_template: (data: API_id) => setTemplate(data.id),

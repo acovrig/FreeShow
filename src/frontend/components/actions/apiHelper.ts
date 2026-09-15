@@ -559,6 +559,44 @@ export async function changeShowLayout(data: API_layout) {
     })
 }
 
+// sets the text content of a specific item (text box) on a specific slide, targeted by slideId (from get_slide/
+// get_show_layout/get_current_slide) or by layoutId+index, and itemIndex (position within slide.items, default 0).
+// preserves each existing line's alignment/style, only replacing the text value, so formatting set up in the editor survives.
+export async function setItemText(data: API_set_item_text) {
+    const useActiveShow = !data.showId || data.showId === "active"
+    const showId = useActiveShow ? get(activeShow)?.id : data.showId
+    if (!showId) return null
+    if (!useActiveShow) await loadShows([showId])
+
+    let slideId = data.slideId
+    if (!slideId && data.index !== undefined) {
+        const layoutId = data.layoutId || _show(showId).get("settings.activeLayout")
+        const showRef = _show(showId)
+            .layouts(layoutId ? [layoutId] : "active")
+            .ref()[0]
+        slideId = showRef?.[data.index]?.id
+    }
+    if (!slideId) return null
+
+    const itemIndex = data.itemIndex ?? 0
+    const currentItem = _show(showId).slides([slideId]).items([itemIndex]).get()[0]?.[0]
+    if (!currentItem) return null
+
+    const existingLines: any[] = currentItem.lines || []
+    const newLineValues = String(data.value ?? "").split("\n")
+    const newLines = newLineValues.map((value, i) => {
+        const existing = existingLines[i] || existingLines[existingLines.length - 1] || {}
+        return { align: existing.align || "", text: [{ value, style: existing.text?.[0]?.style || "" }] }
+    })
+
+    _show(showId)
+        .slides([slideId])
+        .items([itemIndex])
+        .set({ key: "lines", values: [newLines] })
+
+    return { showId, slideId, itemIndex, text: newLineValues.join("\n") }
+}
+
 export async function setShowAPI(id: string, value: string) {
     await loadShows([id])
     try {
@@ -1191,7 +1229,11 @@ export function addToProject(data: API_add_to_project) {
 
 export function createProject(data: API_create_project) {
     const parentFolder = get(folders)[get(projects)[get(activeProject) || ""]?.parent] ? get(projects)[get(activeProject) || ""]?.parent || "/" : "/"
-    history({ id: "UPDATE", save: false, newData: { replace: { parent: parentFolder, name: data.name } }, oldData: { id: data.id }, location: { page: "show", id: "project" } })
+    // history() fills in oldData.id (generating one via uid() when data.id isn't provided) and sets it as the active project,
+    // so subsequent create_show/add_to_project calls can target it without the caller having to invent an id upfront
+    const historyObj: any = { id: "UPDATE", save: false, newData: { replace: { parent: parentFolder, name: data.name } }, oldData: { id: data.id }, location: { page: "show", id: "project" } }
+    history(historyObj)
+    return { id: historyObj.oldData?.id || null }
 }
 
 // DELETE
