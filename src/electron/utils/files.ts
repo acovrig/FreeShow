@@ -1039,16 +1039,9 @@ export async function detectNewFiles() {
 /// ///
 
 // region: BUNDLE MEDIA FILES FROM ALL SHOWS AND PROJECTS (IMAGE/VIDEO/AUDIO)
-let currentlyBundling = false
-/**
- * Bundles media files from all shows and projects
- *
- * @param openFolderWhenDone [default=false] Whether to open the output folder when done
- */
-export function bundleMediaFiles({ openFolder = false, outputPath = "" }: { openFolder?: boolean; outputPath?: string } = {}) {
-    if (currentlyBundling) return
-    currentlyBundling = true
 
+// collects every media file path referenced by shows, projects, overlays & templates
+export function getAllReferencedMediaPaths(): string[] {
     let allMediaFiles: string[] = []
     function addFile(filePath: string | undefined) {
         if (filePath) allMediaFiles.push(filePath)
@@ -1076,6 +1069,14 @@ export function bundleMediaFiles({ openFolder = false, outputPath = "" }: { open
 
         // slide media items
         Object.values(show.slides || {}).forEach((a) => getItemsMedia(a.items || []))
+
+        // stinger transition videos (per-slide text/media transition override)
+        Object.values(show.layouts || {}).forEach((layout) => {
+            layout.slides?.forEach((slideData) => {
+                addStingerPath(slideData.transition)
+                addStingerPath(slideData.mediaTransition)
+            })
+        })
     }
     for (const name of showsList) readShow(name)
 
@@ -1108,8 +1109,48 @@ export function bundleMediaFiles({ openFolder = false, outputPath = "" }: { open
         })
     }
 
+    function addStingerPath(transition: { stinger?: { path?: string } } | undefined) {
+        addFile(transition?.stinger?.path)
+    }
+
+    // stinger transition videos set on a style, or as the global default transition
+    const styles = getStore("SYNCED_SETTINGS").styles
+    Object.values(styles || {}).forEach((style: any) => {
+        Object.values(style?.transition || {}).forEach((transition: any) => addStingerPath(transition))
+    })
+    const transitionData = getStore("SETTINGS").transitionData as { text?: any; media?: any } | undefined
+    addStingerPath(transitionData?.text)
+    addStingerPath(transitionData?.media)
+
     // remove duplicates
     allMediaFiles = [...new Set(allMediaFiles)]
+    return allMediaFiles
+}
+
+// a referenced media path is often stale (moved/renamed disk, imported from another program/machine).
+// fall back to where the media sync folder would have put it (same folderId/fileName layout as locateMediaFile checks).
+export function resolveReferencedMediaPath(mediaPath: string): string | null {
+    if (doesPathExist(mediaPath) && !fs.lstatSync(mediaPath).isDirectory()) return mediaPath
+
+    const folderId = getFileParentFolderId(mediaPath)
+    const fileName = path.basename(mediaPath)
+    const syncedPath = path.join(getMediaSyncFolderPath(), folderId, fileName)
+    if (doesPathExist(syncedPath) && !fs.lstatSync(syncedPath).isDirectory()) return syncedPath
+
+    return null
+}
+
+let currentlyBundling = false
+/**
+ * Bundles media files from all shows and projects
+ *
+ * @param openFolderWhenDone [default=false] Whether to open the output folder when done
+ */
+export function bundleMediaFiles({ openFolder = false, outputPath = "" }: { openFolder?: boolean; outputPath?: string } = {}) {
+    if (currentlyBundling) return
+    currentlyBundling = true
+
+    const allMediaFiles = getAllReferencedMediaPaths()
     if (!allMediaFiles.length) {
         currentlyBundling = false
         return
@@ -1161,7 +1202,7 @@ export async function addToMediaFolder(mediaPaths: string[], outputFolder?: stri
     return changed
 }
 
-function getFileParentFolderId(filePath: string) {
+export function getFileParentFolderId(filePath: string) {
     const fileFolderPath = upath.dirname(filePath)
     const parentFolderName = upath.basename(fileFolderPath)
     const uniqueName = parentFolderName + "_" + filePathHashCode(fileFolderPath)

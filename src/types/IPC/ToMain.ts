@@ -1,7 +1,7 @@
 import type { ICommonTagsResult } from "music-metadata"
 import type { ContentProviderId } from "../../electron/contentProviders/base/types"
 import type { RtmpStatus } from "../Output"
-import type { TrimmedShows } from "../Show"
+import type { Show, TrimmedShows } from "../Show"
 
 export enum ToMain {
     ALERT = "ALERT",
@@ -35,6 +35,7 @@ export enum ToMain {
     SAVE2 = "SAVE2",
     REFRESH_SHOWS2 = "REFRESH_SHOWS2",
     RESTORE2 = "RESTORE2",
+    SHOWS_UPDATED = "SHOWS_UPDATED",
     API_TRIGGER2 = "API_TRIGGER2",
     OPEN_FOLDER2 = "OPEN_FOLDER2",
     OPEN_FILE2 = "OPEN_FILE2",
@@ -69,6 +70,7 @@ export interface ToMainSendPayloads {
     [ToMain.SAVE2]: { closeWhenFinished: boolean; customTriggers: any }
     [ToMain.REFRESH_SHOWS2]: TrimmedShows
     [ToMain.RESTORE2]: { starting?: boolean; finished?: boolean }
+    [ToMain.SHOWS_UPDATED]: { shows: [string, Show][] }
     [ToMain.API_TRIGGER2]: { action: string; returnId: string; data: any }
     [ToMain.OPEN_FOLDER2]: { channel: string; path: string }
     [ToMain.OPEN_FILE2]: { channel: string; id: string; files: string[]; content: { [key: string]: string } }

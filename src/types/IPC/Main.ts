@@ -143,6 +143,8 @@ export enum Main {
     READ_FILE = "READ_FILE",
     OPEN_FOLDER = "OPEN_FOLDER",
     OPEN_FILE = "OPEN_FILE",
+    SYNC_TO_FOLDER = "SYNC_TO_FOLDER",
+    SYNC_FROM_FOLDER = "SYNC_FROM_FOLDER",
     // SYNC
     CAN_SYNC = "CAN_SYNC",
     GET_TEAMS = "GET_TEAMS",
@@ -262,6 +264,8 @@ export interface MainSendPayloads {
     [Main.READ_FILE]: { path: string }
     [Main.OPEN_FOLDER]: { channel: string; title?: string; path?: string }
     [Main.OPEN_FILE]: { id: string; channel: string; title?: string; filter: any; multiple: boolean; read?: boolean }
+    [Main.SYNC_TO_FOLDER]: { folderPath: string; deleteMissing: boolean; includeMedia: boolean }
+    [Main.SYNC_FROM_FOLDER]: { folderPath: string; deleteMissing: boolean; includeMedia: boolean }
     // SYNC
     [Main.CAN_SYNC]?: { id: SyncProviderId }
     [Main.GET_TEAMS]?: { id: SyncProviderId }
@@ -380,6 +384,8 @@ export interface MainReturnPayloads {
     [Main.FILE_INFO]: { path: string; stat: Stats; extension: string; folder: boolean } | null
     [Main.READ_FOLDER]: Promise<{ [key: string]: FileFolder }>
     [Main.READ_FILE]: { content: string }
+    [Main.SYNC_TO_FOLDER]: Promise<{ success: boolean; error?: "no_folder"; copied: number; deleted: number }>
+    [Main.SYNC_FROM_FOLDER]: Promise<{ success: boolean; error?: "no_folder"; copied: number; deleted: number }>
     // SYNC
     [Main.CAN_SYNC]: Promise<boolean>
     [Main.GET_TEAMS]: Promise<{ id: string; churchId: string; name: string }[]>

@@ -210,6 +210,22 @@ export const mainResponses: MainResponses = {
         alertMessage.set("<h3>Updated shows</h3><br>● Old shows: " + oldCount + "<br>● New shows: " + newCount)
         activePopup.set("alert")
     },
+    [ToMain.SHOWS_UPDATED]: ({ shows: updatedShows }) => {
+        // these shows were overwritten on disk (e.g. by a local folder sync) - a show already loaded into memory is
+        // never re-read from disk on its own, so push the fresh content directly instead of waiting on a re-fetch
+        showsCache.update((cache) => {
+            updatedShows.forEach(([id, show]) => {
+                cache[id] = show
+            })
+            return cache
+        })
+
+        const openId = get(activeShow)?.id
+        if (openId && updatedShows.some(([id]) => id === openId)) {
+            activeEdit.set({ items: [] })
+            activeShow.set(null)
+        }
+    },
     [ToMain.BACKUP]: ({ finished, path }) => {
         if (!finished) return activePopup.set(null)
 

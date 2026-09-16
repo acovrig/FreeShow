@@ -8,8 +8,10 @@
     import { previousAutosave, startAutosave, wait } from "../../../utils/common"
     import { validateKeys } from "../../../utils/drive"
     import { translateText } from "../../../utils/language"
+    import { confirmCustom } from "../../../utils/popup"
     import { save } from "../../../utils/save"
     import { convertAutosave } from "../../../values/autosave"
+    import { clearMediaCaches } from "../../helpers/media"
     import T from "../../helpers/T.svelte"
     import { getTimeFromInterval, joinTimeBig } from "../../helpers/time"
     import InputRow from "../../input/InputRow.svelte"
@@ -87,6 +89,10 @@
         updater = setInterval(checkTimes, 1000)
 
         if ($cloudSyncData.enabled && $special.cloudSyncMediaFolder) mediaFolderPath = (await requestMain(Main.GET_MEDIA_FOLDER_PATH)) || ""
+
+        syncFolderPath = (await requestMain(Main.GET_STORE_VALUE, { file: "config", key: "localSyncFolderPath" })) || ""
+        syncDeleteMissing = !!(await requestMain(Main.GET_STORE_VALUE, { file: "config", key: "localSyncDeleteMissing" }))
+        syncIncludeMedia = !!(await requestMain(Main.GET_STORE_VALUE, { file: "config", key: "localSyncIncludeMedia" }))
     })
     onDestroy(() => {
         if (updater) clearInterval(updater)
@@ -175,6 +181,55 @@
         dataPath.set(newPath)
 
         sendMain(Main.REFRESH_SHOWS)
+    }
+
+    // LOCAL SYNC
+
+    let syncFolderPath = ""
+    let syncDeleteMissing = false
+    let syncIncludeMedia = false
+
+    async function updateSyncFolderPath(e: any) {
+        syncFolderPath = e.detail || ""
+        sendMain(Main.SET_STORE_VALUE, { file: "config", key: "localSyncFolderPath", value: syncFolderPath })
+    }
+
+    function updateSyncDeleteMissing(e: any) {
+        syncDeleteMissing = !!e.detail
+        sendMain(Main.SET_STORE_VALUE, { file: "config", key: "localSyncDeleteMissing", value: syncDeleteMissing })
+    }
+
+    function updateSyncIncludeMedia(e: any) {
+        syncIncludeMedia = !!e.detail
+        sendMain(Main.SET_STORE_VALUE, { file: "config", key: "localSyncIncludeMedia", value: syncIncludeMedia })
+    }
+
+    let syncing = false
+    async function syncShows(direction: "to" | "from") {
+        if (!syncFolderPath || syncing) return
+
+        if (syncDeleteMissing) {
+            const confirmed = await confirmCustom(translateText(direction === "to" ? "settings.sync_to_delete_confirm" : "settings.sync_from_delete_confirm"))
+            if (!confirmed) return
+        }
+
+        syncing = true
+        const channel = direction === "to" ? Main.SYNC_TO_FOLDER : Main.SYNC_FROM_FOLDER
+        const result = await requestMain(channel, { folderPath: syncFolderPath, deleteMissing: syncDeleteMissing, includeMedia: syncIncludeMedia })
+        syncing = false
+
+        if (!result?.success) {
+            alertMessage.set(translateText("settings.sync_folder_error"))
+            activePopup.set("alert")
+            return
+        }
+
+        // a "not found" media lookup is cached for the rest of the session - a "from" sync can introduce media
+        // that a previous lookup (in this same run) already cached as missing, so drop those cached misses
+        if (direction === "from") clearMediaCaches()
+
+        alertMessage.set(`<h3>${translateText("settings.sync_finished")}</h3><br>● ${translateText("settings.sync_copied")}: ${result.copied}<br>● ${translateText("settings.sync_deleted")}: ${result.deleted}`)
+        activePopup.set("alert")
     }
 
     // CLOUD
@@ -270,6 +325,25 @@
 <MaterialDropdown label="settings.auto_backup{autoBackupInfo}" value={autoBackup} defaultValue="weekly" options={autobackupList} on:change={(e) => updateSpecial(e.detail, "autoBackup")} />
 
 <MaterialFolderPicker label="settings.data_location" value={$dataPath} on:change={updateDataPath} />
+
+<!-- local sync -->
+<Title label="settings.local_sync" icon="folder" title="settings.local_sync_info" />
+
+<MaterialFolderPicker label="settings.sync_folder" value={syncFolderPath} on:change={updateSyncFolderPath} allowEmpty />
+
+{#if syncFolderPath}
+    <MaterialToggleSwitch label="settings.sync_delete_missing" title="settings.sync_delete_missing_tip" style="width: 100%;" checked={syncDeleteMissing} defaultValue={false} on:change={updateSyncDeleteMissing} />
+    <MaterialToggleSwitch label="settings.sync_include_media" title="settings.sync_include_media_tip" style="width: 100%;" checked={syncIncludeMedia} defaultValue={false} on:change={updateSyncIncludeMedia} />
+
+    <InputRow>
+        <MaterialButton style="flex: 1;" icon="export" disabled={syncing} on:click={() => syncShows("to")}>
+            <T id="settings.sync_to" />
+        </MaterialButton>
+        <MaterialButton style="flex: 1;" icon="import" disabled={syncing} on:click={() => syncShows("from")}>
+            <T id="settings.sync_from" />
+        </MaterialButton>
+    </InputRow>
+{/if}
 
 <!-- {#key refreshInput}
     <MaterialToggleSwitch label="settings.user_data_location" disabled={!$dataPath} checked={$special.customUserDataLocation || false} defaultValue={false} on:change={(e) => toggle(e.detail, "customUserDataLocation")} />

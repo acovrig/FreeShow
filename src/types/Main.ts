@@ -17,6 +17,9 @@ export interface Config {
     churchAppsAppUrl?: string
     churchAppsContentUrl?: string
     churchAppsLessonsUrl?: string
+    localSyncFolderPath?: string
+    localSyncDeleteMissing?: boolean
+    localSyncIncludeMedia?: boolean
 }
 
 export interface OS {

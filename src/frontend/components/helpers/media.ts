@@ -171,7 +171,7 @@ const locatedMediaCache = new Map<string, { path: string; hasChanged: boolean } 
 const mediaExistsCache = new Map<string, boolean>()
 let currentlyGetting: string[] = []
 
-function clearMediaCaches() {
+export function clearMediaCaches() {
     locatedMediaCache.clear()
     replacedPaths.clear()
     mediaExistsCache.clear()
