@@ -5,7 +5,7 @@ import { ToMain } from "../../types/IPC/ToMain"
 import type { SaveActions } from "../../types/Save"
 import type { Show, Shows } from "../../types/Show"
 import { sendMain, sendToMain } from "../IPC/main"
-import { deleteFile, deleteFolder, doesPathExist, getDataFolderPath, getFileStats, getTimePointString, loadShows, makeDir, openInSystem, readFile, readFolder, selectFilesDialog, writeFile } from "../utils/files"
+import { deleteFile, deleteFolder, doesPathExist, getAllReferencedMediaPaths, getDataFolderPath, getFileParentFolderId, getFileStats, getMediaSyncFolderPath, getTimePointString, loadShows, makeDir, openInSystem, readFile, readFolder, resolveReferencedMediaPath, selectFilesDialog, writeFile } from "../utils/files"
 import { _store, setStore, storeFilesData } from "./store"
 import { compressToZip, decompressZip } from "./zip"
 
@@ -36,6 +36,9 @@ export async function startBackup({ customTriggers, isCloudSync }: { customTrigg
 
     // SHOWS
     await syncAllShows()
+
+    // MEDIA (only when explicitly requested, as this can add a lot of data)
+    if (!isCloudSync && customTriggers?.includeMedia) await syncMedia()
 
     if (isCloudSync) return { entries }
 
@@ -84,6 +87,22 @@ export async function startBackup({ customTriggers, isCloudSync }: { customTrigg
             if (fileName.toLowerCase().endsWith(".show")) {
                 entries.push({ name: "SHOWS/" + fileName, filePath: path.join(showsPath, fileName) })
             }
+        }
+    }
+
+    // referenced media files, stored under the same folderId/fileName layout the media sync folder uses,
+    // so a restore lands where the existing "locate missing media" lookup already checks.
+    // a stored path is often stale (moved/renamed disk, imported from another program), so resolve it first
+    async function syncMedia() {
+        const mediaFiles = getAllReferencedMediaPaths()
+
+        for (const mediaPath of mediaFiles) {
+            const resolvedPath = resolveReferencedMediaPath(mediaPath)
+            if (!resolvedPath) continue
+
+            const folderId = getFileParentFolderId(mediaPath)
+            const fileName = path.basename(mediaPath)
+            entries.push({ name: `MEDIA/${folderId}/${fileName}`, filePath: resolvedPath })
         }
     }
 }
@@ -164,12 +183,20 @@ function removeBackup(fullPath: string) {
 
 // RESTORE
 
+// media entries stream straight to disk instead of being buffered/stringified in memory (they can be large binaries)
+function getMediaRestoreOutputPath(fileName: string): string | undefined {
+    if (!fileName.startsWith("MEDIA/")) return undefined
+    const relative = fileName.slice("MEDIA/".length)
+    if (!relative) return undefined
+    return path.join(getMediaSyncFolderPath(), relative)
+}
+
 export async function restoreFiles(data?: { path: string }) {
     let files: { name: string; content: string | Buffer }[] = []
 
     if (data?.path) {
         if (data.path.endsWith(".zip")) {
-            const decompressed = await decompressZip([data.path], false)
+            const decompressed = await decompressZip([data.path], false, { getOutputPath: getMediaRestoreOutputPath })
             files = decompressed.map((d) => ({ name: d.name, content: d.content }))
         } else {
             files = readFolder(data.path).map((name) => ({ name, content: readFile(path.join(data.path, name)) || "" }))
@@ -181,7 +208,7 @@ export async function restoreFiles(data?: { path: string }) {
         if (selectedPaths?.length) {
             for (const p of selectedPaths) {
                 if (p.endsWith(".zip")) {
-                    const decompressed = await decompressZip([p], false)
+                    const decompressed = await decompressZip([p], false, { getOutputPath: getMediaRestoreOutputPath })
                     files.push(...decompressed.map((d) => ({ name: d.name, content: d.content })))
                 } else {
                     files.push({ name: path.basename(p), content: readFile(p) || "" })
@@ -200,8 +227,12 @@ export async function restoreFiles(data?: { path: string }) {
 
     let showsRestored = false
     files.forEach((file: { name: string; content: string | Buffer }) => {
-        if (typeof file.content !== "string") return
         const filePath = file.name
+
+        // already streamed straight to the media sync folder by decompressZip's getOutputPath
+        if (filePath.startsWith("MEDIA/")) return
+
+        if (typeof file.content !== "string") return
 
         if (filePath.includes("SHOWS_CONTENT")) {
             restoreShows(file.content)
