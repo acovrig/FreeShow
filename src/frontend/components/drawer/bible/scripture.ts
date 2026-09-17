@@ -22,6 +22,7 @@ import { clone, removeDuplicates } from "../../helpers/array"
 import { history } from "../../helpers/history"
 import { getMediaStyle } from "../../helpers/media"
 import { getAllNormalOutputs, getFirstActiveOutput, setOutput } from "../../helpers/output"
+import { setDrawerTabData } from "../../helpers/historyHelpers"
 import { checkName } from "../../helpers/show"
 
 const SCRIPTURE_API_URL = "https://api.churchapps.org/content/bibles"
@@ -2263,11 +2264,18 @@ export function parseEngScriptureRefToNumbers(ref: string) {
     return { id: ref, book, chapter: Number(chapterStr), verses }
 }
 
-export async function generateScriptureShowFromReference(referenceText: string) {
-    const resolved = await resolveScriptureReference(referenceText)
+// restoreState: put the drawer scripture tab/selection back afterwards (used by the API so generating has no visible side effects)
+export async function generateScriptureShowFromReference(referenceText: string, scriptureId = "", restoreState = false) {
+    const resolved = await resolveScriptureReference(referenceText, scriptureId)
     if (!resolved) return null
 
+    const previousTab = get(drawerTabsData).scripture?.activeSubTab
+    const previousScripture = get(activeScripture)
+
     try {
+        // content is loaded from the active drawer tab, so it has to match the resolved bible
+        if (scriptureId && previousTab !== resolved.id) setDrawerTabData("scripture", resolved.id)
+
         // open the scripture location in the drawer
         activeScripture.set({ id: resolved.id, reference: { book: resolved.book, chapters: [resolved.chapter], verses: [resolved.verses] } })
 
@@ -2281,5 +2289,10 @@ export async function generateScriptureShowFromReference(referenceText: string) 
     } catch (err) {
         console.error("Error generating scripture show from reference:", err)
         return null
+    } finally {
+        if (restoreState) {
+            if (get(drawerTabsData).scripture?.activeSubTab !== previousTab) setDrawerTabData("scripture", previousTab || "")
+            activeScripture.set(previousScripture)
+        }
     }
 }

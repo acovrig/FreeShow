@@ -11,7 +11,7 @@ import { dbToGain } from "../../audio/dBUtils"
 import { activeDrawerTab, activeEdit, activePage, activeProject, activeRecording, activeShow, activeTimers, audioChannelsData, audioPlaylists, audioRouting, draw, drawSettings, drawTool, folders, groupNumbers, groups, media, openScripture, outLocked, outputs, overlays, pdfImports, playingAudio, playingMetronome, projects, refreshEditSlide, selected, shows, showsCache, sortedShowsList, special, styles, timers, variables } from "../../stores"
 import { newToast, triggerFunction } from "../../utils/common"
 import { send } from "../../utils/request"
-import { parseEngScriptureRefToNumbers, resolveScriptureReference } from "../drawer/bible/scripture"
+import { generateScriptureShowFromReference, parseEngScriptureRefToNumbers, resolveScriptureReference } from "../drawer/bible/scripture"
 import { startOutputRecording, stopMediaRecorder } from "../drawer/live/recorder"
 import { getDynamicValue } from "../edit/scripts/itemHelpers"
 import { keysToID, removeDeleted, sortByName } from "../helpers/array"
@@ -30,7 +30,7 @@ import { VideoPlayer } from "../media/video/videoPlayer"
 import { clearBackground, clearSlide } from "../output/clear"
 import { getPlainEditorText } from "../show/getTextEditor"
 import { getSlideGroups } from "../show/tools/groups"
-import type { API_add_to_project, API_set_project_item, API_create_project, API_disable_slide, API_draw_zoom, API_edit_timer, API_group, API_id_index, API_id_value, API_layout, API_media, API_output_lock, API_rearrange, API_scripture, API_seek, API_slide_index, API_toggle_id, API_toggle_specific, API_variable, API_volume } from "./api"
+import type { API_add_to_project, API_generate_scripture_show, API_set_project_item, API_create_project, API_disable_slide, API_draw_zoom, API_edit_timer, API_group, API_id_index, API_id_value, API_layout, API_media, API_output_lock, API_rearrange, API_scripture, API_seek, API_slide_index, API_toggle_id, API_toggle_specific, API_variable, API_volume } from "./api"
 
 export function selectShowById(id: string) {
     if (typeof id !== "string" || !id) return
@@ -765,6 +765,12 @@ export async function startScripture(data: API_scripture) {
     activeDrawerTab.set("scripture")
 
     openScripture.set({ ...ref, play: true })
+}
+
+// returns a themed scripture show (same as the drawer would create) without saving it or changing output
+export async function generateScriptureShow(data: API_generate_scripture_show) {
+    if (typeof data?.reference !== "string" || !data.reference.trim()) return null
+    return (await generateScriptureShowFromReference(data.reference, data.id, true)) || null
 }
 
 // MEDIA
