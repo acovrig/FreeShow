@@ -2219,7 +2219,16 @@ export async function resolveScriptureReference(referenceText: string, scripture
         const bible = await loadJsonBible(activeScriptureId)
         if (!bible) return null
 
-        const bookResult = bible.bookSearch(referenceText)
+        let bookResult = bible.bookSearch(referenceText)
+        if (!bookResult?.book) return null
+
+        // API bibles load chapters/verses lazily & bookSearch only sees loaded data, so load them and search again
+        const loadedBook = await bible.getBook(bookResult.book)
+        bookResult = bible.bookSearch(referenceText)
+        if (bookResult?.chapter) {
+            await loadedBook.getChapter(Number(bookResult.chapter))
+            bookResult = bible.bookSearch(referenceText)
+        }
         if (!bookResult?.book) return null
 
         const book = bookResult.book
