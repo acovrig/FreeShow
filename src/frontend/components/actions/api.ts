@@ -1,5 +1,5 @@
 import { Main } from "../../../types/IPC/Main"
-import type { MidiValues, TransitionType } from "../../../types/Show"
+import type { MidiValues, ShowType, TransitionType } from "../../../types/Show"
 import { clearAudio } from "../../audio/audioFading"
 import { AudioMicrophone } from "../../audio/audioMicrophone"
 import { AudioPlayer } from "../../audio/audioPlayer"
@@ -33,6 +33,7 @@ import { getActions, getCurrentSlide, getOutput, getOutputGroupName, getOutputSl
 import {
     addGroup,
     addToProject,
+    setProjectItem,
     audioSeekTo,
     changeDrawZoom,
     changeShowLayout,
@@ -198,7 +199,10 @@ export type API_emitter = {
 
 // ADD
 
-export type API_add_to_project = { projectId: string; id: string; data?: any }
+export type API_add_to_project = { projectId: string; id: string; data?: any; index?: number } // index: 1-based insert position (default: append)
+// replace an existing project item in place (position preserved)
+// target: index (1-based), else first item matching targetId, else first item matching targetType (default "show_placeholder")
+export type API_set_project_item = { projectId: string; id: string; data?: any; index?: number; targetId?: string; targetType?: ShowType }
 
 // CREATE
 
@@ -390,6 +394,7 @@ export const API_ACTIONS = {
 
     // ADD
     add_to_project: (data: API_add_to_project) => addToProject(data),
+    set_project_item: (data: API_set_project_item) => setProjectItem(data),
 
     // CREATE
     create_show: (data: API_create_show) => convertText({ noFormatting: true, open: false, ...data }),
