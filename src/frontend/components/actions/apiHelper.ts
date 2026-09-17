@@ -29,7 +29,7 @@ import { VideoPlayer } from "../media/video/videoPlayer"
 import { clearBackground, clearSlide } from "../output/clear"
 import { getPlainEditorText } from "../show/getTextEditor"
 import { getSlideGroups } from "../show/tools/groups"
-import type { API_add_to_project, API_create_project, API_disable_slide, API_draw_zoom, API_edit_timer, API_group, API_id_index, API_id_value, API_layout, API_media, API_output_lock, API_rearrange, API_scripture, API_seek, API_slide_index, API_toggle_id, API_toggle_specific, API_variable, API_volume } from "./api"
+import type { API_add_to_project, API_set_project_item, API_create_project, API_disable_slide, API_draw_zoom, API_edit_timer, API_group, API_id_index, API_id_value, API_layout, API_media, API_output_lock, API_rearrange, API_scripture, API_seek, API_slide_index, API_toggle_id, API_toggle_specific, API_variable, API_volume } from "./api"
 
 export function selectShowById(id: string) {
     if (typeof id !== "string" || !id) return
@@ -1217,12 +1217,35 @@ export function addToProject(data: API_add_to_project) {
 
     projects.update((a) => {
         if (!a[data.projectId]?.shows || a[data.projectId].shows.find((item) => item.id === data.id)) return a
-        a[data.projectId].shows.push({ ...(data.data || {}), id: data.id })
+        const newItem = { ...(data.data || {}), id: data.id }
+        if (typeof data.index === "number" && data.index >= 0) a[data.projectId].shows.splice(data.index, 0, newItem)
+        else a[data.projectId].shows.push(newItem)
         a[data.projectId].modified = Date.now()
         return a
     })
 
     return get(projects)
+}
+
+export function setProjectItem(data: API_set_project_item) {
+    const projectItems = get(projects)[data.projectId]?.shows
+    if (!projectItems || !data.id) return { index: -1 }
+
+    let index = -1
+    if (typeof data.index === "number") index = data.index
+    else if (data.targetId) index = projectItems.findIndex((item) => item.id === data.targetId)
+    else index = projectItems.findIndex((item) => item.type === (data.targetType || "show_placeholder"))
+    if (index < 0 || index >= projectItems.length) return { index: -1 }
+
+    // open altered project in the app
+    activeProject.set(data.projectId)
+
+    const newItems = [...projectItems]
+    newItems[index] = { ...(data.data || {}), id: data.id }
+
+    history({ id: "UPDATE", newData: { key: "shows", data: newItems }, oldData: { id: data.projectId }, location: { page: "show", id: "project_key" } })
+    // API indexes start at 1
+    return { index: index + 1 }
 }
 
 // CREATE
