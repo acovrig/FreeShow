@@ -77,6 +77,7 @@ import {
     startPlaylistByName,
     startProjectItemByName,
     startScripture,
+    generateScriptureShow,
     stopAudio,
     stopTimerById,
     stopTimerByName,
@@ -143,6 +144,7 @@ export type API_slide_thumbnail = { showId?: string; layoutId?: string; index?: 
 export type API_seek = { id?: string; seconds: number }
 export type API_media = { path: string; index?: number; data?: any }
 export type API_scripture = { id?: string; reference: string }
+export type API_generate_scripture_show = { reference: string; id?: string } // id: bible/collection id (default: active in drawer)
 export type API_toggle = { id: string; value?: boolean }
 export type API_toggle_specific = { value?: boolean }
 export type API_toggle_id = { id?: string; value?: boolean }
@@ -284,6 +286,7 @@ export const API_ACTIONS = {
     start_scripture: (data: API_scripture) => startScripture(data), // BC
     scripture_next: () => triggerFunction("scripture_next"), // BC
     scripture_previous: () => triggerFunction("scripture_previous"), // BC
+    generate_scripture_show: (data: API_generate_scripture_show) => generateScriptureShow(data),
 
     // OUTPUT
     start_webrtc_stream: (data: API_id_optional) => startStreaming(data.id),
