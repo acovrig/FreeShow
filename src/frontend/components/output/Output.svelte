@@ -11,6 +11,7 @@
     import { custom } from "../../utils/transitions"
     import Draw from "../draw/Draw.svelte"
     import { clone } from "../helpers/array"
+    import { encodeFilePath } from "../helpers/media"
     import { defaultLayers, getCurrentStyle, getMetadata, getOutputLines, getOutputTransitions, getResolution, getSlideFilter, getStyleTemplate, setTemplateStyle } from "../helpers/output"
     import { _show } from "../helpers/shows"
     import Image from "../media/Image.svelte"
@@ -335,6 +336,31 @@
     $: zoomActive = currentOutput.active || (mirror && !preview)
     $: drawZoom = $drawTool === "zoom" && zoomActive ? ($drawSettings.zoom?.size || 200) / 100 : 1
 
+    // STINGER TRANSITION
+    // plays a fullscreen video over the current content, then cuts to the new slide/background underneath it at the configured time (like an OBS stinger)
+    let stingerActive = false
+    let stingerVideoSrc = ""
+    let holdBackground = false
+    let lastStingerSlideKey = ""
+    $: stingerEnabled = !mirror || preview
+    $: slideKey = slide ? `${slide.id}_${slide.layout}_${slide.index}` : ""
+    function getStingerConfig(transition: Transition | undefined) {
+        if (!transition) return null
+        // type can be set on one of the in/out/between overrides instead of the top level, when "specific transitions" is enabled
+        const stingerTransition = [transition, transition.between, transition.in, transition.out].find((a) => a?.type === "stinger")
+        const path = stingerTransition?.stinger?.path
+        if (!path) return null
+        return { path, cutTime: Math.max(0, stingerTransition.stinger?.cutTime || 0) }
+    }
+    function endStinger() {
+        stingerActive = false
+        stingerVideoSrc = ""
+    }
+
+    // background is normally reactive/instant - only held back while a stinger cut is pending
+    let actualBackgroundData: any = null
+    $: if (!holdBackground) actualBackgroundData = backgroundData
+
     // CLEARING
     $: if (slide !== undefined || styleId || layers || sceneHideLayers !== undefined) updateSlide()
     let actualSlide: OutSlide | null = null
@@ -348,15 +374,38 @@
         const slideActive = layers.includes("slide") && !sceneHideLayers
         isSlideClearing = !slide || !slideActive
 
+        const isNewSlide = slideActive && slideKey && slideKey !== lastStingerSlideKey
+        // stinger can be set on either the slide (text) or background (media) transition - whole-slide cut either way
+        const stinger = stingerEnabled && isNewSlide ? getStingerConfig(transitions.text) || getStingerConfig(transitions.media) : null
+
         if (slideTimeout) clearTimeout(slideTimeout)
+
+        if (stinger) {
+            stingerVideoSrc = stinger.path!
+            stingerActive = true
+            holdBackground = true
+        } else if (stingerActive) {
+            // moved on to a non-stinger slide change while a stinger was still covering the screen - reveal immediately
+            endStinger()
+            holdBackground = false
+        }
+
+        const delay = stinger ? stinger.cutTime * 1000 : slide ? updateLinesTime : 0
+
         slideTimeout = setTimeout(
             () => {
+                lastStingerSlideKey = slideKey
                 actualSlide = slideActive ? clone(slide) : null
                 actualSlideData = clone(slideData)
                 actualCurrentSlide = clone(currentSlide)
                 actualCurrentLineId = clone(currentLineId)
+
+                if (holdBackground) {
+                    actualBackgroundData = backgroundData
+                    holdBackground = false
+                }
             },
-            slide ? updateLinesTime : 0
+            delay
         )
     }
 </script>
@@ -373,8 +422,8 @@
     {/if}
 
     <!-- background -->
-    {#if (backgroundData?.ignoreLayer ? layers.includes("slide") : layers.includes("background")) && !sceneHideLayers && backgroundData}
-        <Background data={backgroundData} {outputId} transition={transitions.media} {currentStyle} {slideFilter} {ratio} animationStyle={animationData.style?.background || ""} {mirror} />
+    {#if (actualBackgroundData?.ignoreLayer ? layers.includes("slide") : layers.includes("background")) && !sceneHideLayers && actualBackgroundData}
+        <Background data={actualBackgroundData} {outputId} transition={transitions.media} {currentStyle} {slideFilter} {ratio} animationStyle={animationData.style?.background || ""} {mirror} />
     {/if}
 
     <!-- colorbars for testing -->
@@ -436,6 +485,13 @@
     {#if zoomActive}
         <Draw />
     {/if}
+
+    <!-- stinger transition - fullscreen video that covers the cut to the next slide -->
+    {#if stingerActive && stingerVideoSrc}
+        {#key stingerVideoSrc}
+            <video class="stingerVideo" src={encodeFilePath(stingerVideoSrc)} autoplay muted on:ended={endStinger} on:error={endStinger} />
+        {/key}
+    {/if}
 </Zoomed>
 
 <style>
@@ -448,5 +504,18 @@
         font-size: 28px;
         font-style: italic;
         opacity: 0.7;
+    }
+
+    .stingerVideo {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        /* no background - stingers are usually alpha videos (e.g. VP8/VP9 webm), the slide underneath has to show through the transparent parts */
+        background-color: transparent;
+        z-index: 999;
+        pointer-events: none;
     }
 </style>

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte"
-    import type { Item, OutSlide, SlideData, TimelineAction } from "../../../../types/Show"
+    import type { Item, OutSlide, SlideData, TimelineAction, Transition } from "../../../../types/Show"
     import { scriptureSettings, showsCache, slideTimelineSpeedMultiplier, templates } from "../../../stores"
     import { waitUntilValueIsDefined } from "../../../utils/common"
     import { shouldItemBeShown } from "../../edit/scripts/itemHelpers"
@@ -10,6 +10,8 @@
     import { getStyleTemplate, itemNeedsAutoSize, slideHasAutoSizeItem } from "../../helpers/output"
     import Textbox from "../../slide/Textbox.svelte"
     import { SlideTimeline } from "../../timeline/SlideTimeline"
+    import HeroItemTransition from "../transitions/HeroItemTransition.svelte"
+    import OutputTransition from "../transitions/OutputTransition.svelte"
     import SlideItemTransition from "../transitions/SlideItemTransition.svelte"
 
     export let outputId: string
@@ -55,6 +57,13 @@
     let persistentItems: Item[] = []
     let persistentItemIndexes: number[] = []
 
+    // Hero items morph into their matched counterpart instead of cross-fading.
+    // Rendered via a separate keyed block (keyed by content signature, not array index - items commonly
+    // shift position between slides, e.g. another item gets added/removed before it) so the same DOM node
+    // (and therefore its CSS "morph" transition) survives across the slide change regardless of position.
+    let heroItemIndexes: number[] = []
+    let heroMorphs: { [signature: string]: { item: Item; heroTransition: Transition; index: number } } = {}
+
     // Check if an item has lines/text content
     function hasLinesContent(item: Item | undefined): boolean {
         if (!item) return false
@@ -66,6 +75,32 @@
         if (!oldItem || !newItem) return false
         // Compare the full serialized content (lines, style, etc.)
         return JSON.stringify(oldItem) === JSON.stringify(newItem)
+    }
+
+    // "same item" heuristic for the hero transition - matched on content identity, not position
+    // (position/size is exactly what's expected to differ, that's what gets morphed).
+    // Returns "" when the item has no reliable identity to match on (e.g. empty text box).
+    function getItemSignature(item: Item | undefined): string {
+        if (!item) return ""
+        const type = item.type || "text"
+        if (type === "text") {
+            const text = getItemText(item).trim()
+            return text ? "text:" + text : ""
+        }
+        // media/image/video/etc - match by source
+        const src = item.src || item.media?.id || ""
+        return src ? "media:" + src : ""
+    }
+
+    // find the "hero" transition to use, checking the specific in/out/between overrides (a real transition can have
+    // its type set on one of these sub-objects instead of the top level, when "specific transitions" is enabled)
+    function getHeroTransition(transition: Transition | undefined): Transition | null {
+        if (!transition) return null
+        if (transition.between?.type === "hero") return transition.between
+        if (transition.in?.type === "hero") return transition.in
+        if (transition.out?.type === "hero") return transition.out
+        if (transition.type === "hero") return transition
+        return null
     }
     // maintain a hidden workload that primes autosize results ahead of the visible reveal
     let precomputeTargets: { item: Item; index: number; key: string }[] = []
@@ -192,9 +227,11 @@
         if (!currentSlideItems?.length) {
             scheduleAutoSizePrecompute([])
             currentItems = []
-            // Clear persistent items when no slide content
+            // Clear persistent/hero items when no slide content
             persistentItems = []
             persistentItemIndexes = []
+            heroItemIndexes = []
+            heroMorphs = {}
             current = {
                 outSlide: clone(outSlide),
                 slideData: clone(slideData),
@@ -238,10 +275,40 @@
         const newPersistentItems: Item[] = []
         const transitioningItems: Item[] = []
         const transitioningIndexes: number[] = []
+        const newHeroIndexes: number[] = []
+        const newHeroMorphs: { [signature: string]: { item: Item; heroTransition: Transition; index: number } } = {}
+
+        // index in the old/new item list on a slide doesn't correspond to the "same" item across slides
+        // (items get added/removed/reordered) - so hero matching is by content signature, not position
+        const oldItemsBySignature = new Map<string, Item>()
+        currentItems.forEach((item) => {
+            const signature = getItemSignature(item)
+            if (signature) oldItemsBySignature.set(signature, item)
+        })
 
         currentSlide.items.forEach((newItem: Item, newIndex: number) => {
             // Find matching old item by index (position-based matching for slides)
             const oldItem = currentItems[newIndex]
+
+            // Hero: morph into a matching item instead of cross-fading, when a match is found on the previous slide.
+            // Falls back to a normal (fade) transition below when there's no matching item.
+            // Either end of the transition can carry the "hero" tag - the item leaving the old slide, or the item arriving on the new one -
+            // and it can be set on the base type or on one of the in/out/between overrides.
+            const signature = getItemSignature(newItem)
+            const matchedOldItem = signature ? oldItemsBySignature.get(signature) : undefined
+            const newHeroTransition = getHeroTransition(newItem.actions?.transition || currentTransition)
+            const oldHeroTransition = getHeroTransition(matchedOldItem?.actions?.transition)
+            // Route every hero enabled item through the keyed hero block, also when there's no match on the previous slide.
+            // The morph interpolates an existing DOM node, so that node has to already be mounted (at the old position)
+            // when the slide changes. Only joining the block once a match appeared meant the first change created the node
+            // from scratch at its new position - nothing to interpolate from, so it cut, and only morphed from the second
+            // transition onwards. Without a match the item just mounts/unmounts with the regular fade (see markup below).
+            // Duplicate signatures (two identical items on one slide) can't be keyed apart - the extra one falls through.
+            if (transitionEnabled && signature && !newHeroMorphs[signature] && (newHeroTransition || oldHeroTransition)) {
+                newHeroIndexes.push(newIndex)
+                newHeroMorphs[signature] = { item: clone(newItem), heroTransition: (newHeroTransition || oldHeroTransition) as Transition, index: newIndex }
+                return
+            }
 
             // Item is persistent if:
             // 1. Content is unchanged AND
@@ -259,6 +326,10 @@
         // Update persistent items (these won't flash)
         persistentItemIndexes = newPersistentIndexes
         persistentItems = newPersistentItems
+
+        // Update hero items (these morph via a native CSS transition instead of cross-fading)
+        heroItemIndexes = newHeroIndexes
+        heroMorphs = newHeroMorphs
 
         // between
         const isDifferentSlide = current.currentSlide?.id !== currentSlide?.id || current.outSlide?.index !== outSlide?.index || current.outSlide?.id !== outSlide?.id
@@ -446,6 +517,8 @@
                 autoSizeKey={createAutoSizeKey(item, index)}
                 updateDynamicValues={!isClearing}
             />
+        {:else if heroItemIndexes.includes(index)}
+            <!-- Hero item: rendered below in a signature-keyed block instead, so its DOM node survives moving to a different index -->
         {:else}
             <!-- Transitioning item: render with animation wrapper inside {#key} -->
             {#key show}
@@ -475,6 +548,35 @@
                 {/if}
             {/key}
         {/if}
+    {/if}
+{/each}
+
+<!-- Hero items: keyed by content signature (not array index) so the DOM node persists across the slide change even if the item's position shifts.
+     A persisting node morphs (no in/out runs on it); one without a counterpart on the other slide fades in/out like a normal item. -->
+{#each Object.entries(heroMorphs) as [signature, morph] (signature)}
+    {#if shouldItemBeShown(morph.item, [], showItemRef, conditionsUpdater) && (!morph.item.clickReveal || current.outSlide?.itemClickReveal)}
+        <OutputTransition inTransition={morph.heroTransition} outTransition={morph.heroTransition}>
+            <HeroItemTransition
+                backdropFilter={current.slideData?.["backdrop-filter"] || ""}
+                chords={morph.item.chords?.enabled}
+                animationStyle={animationData.style || {}}
+                item={timelineItems.get(`${current.outSlide?.id}-${current.outSlide?.layout}-${current.outSlide?.index}`)?.[morph.index] || morph.item}
+                heroTransition={morph.heroTransition}
+                {ratio}
+                {outputId}
+                ref={{ type: "show", showId: current.outSlide?.id, slideId: current.currentSlide?.id, id: current.currentSlide?.id || "", layoutId: current.outSlide?.layout }}
+                linesStart={current.lines?.[currentLineId || ""]?.[morph.item.lineReveal ? "linesStart" : "start"]}
+                linesEnd={current.lines?.[currentLineId || ""]?.[morph.item.lineReveal ? "linesEnd" : "end"]}
+                clickRevealed={!!current.lines?.[currentLineId || ""]?.clickRevealed}
+                outputStyle={current.currentStyle}
+                {mirror}
+                {preview}
+                slideIndex={current.outSlide?.index}
+                {styleIdOverride}
+                autoSizeKey={createAutoSizeKey(morph.item, morph.index)}
+                updateDynamicValues={!isClearing}
+            />
+        </OutputTransition>
     {/if}
 {/each}
 

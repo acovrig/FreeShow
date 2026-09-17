@@ -1644,6 +1644,10 @@
         "scale": "Scale",
         "spin": "Spin",
         "slide": "Slide",
+        "hero": "Hero",
+        "stinger": "Stinger",
+        "stinger_video": "Stinger video",
+        "cut_at": "Switch slide at (seconds)",
         "fade_in_offset": "Fade in offset"
     },
     "easings": {

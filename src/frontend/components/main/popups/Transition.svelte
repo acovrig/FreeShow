@@ -15,6 +15,7 @@
     import InputRow from "../../input/InputRow.svelte"
     import MaterialButton from "../../inputs/MaterialButton.svelte"
     import MaterialDropdown from "../../inputs/MaterialDropdown.svelte"
+    import MaterialFilePicker from "../../inputs/MaterialFilePicker.svelte"
     import MaterialNumberInput from "../../inputs/MaterialNumberInput.svelte"
     import Tabs from "../Tabs.svelte"
 
@@ -29,12 +30,14 @@
         blur: '<g><rect width="100" height="100" style="fill:rgb(0,0,0)" fill-opacity="0"/><defs><linearGradient id="_lgradient_4" x1="-3.885780586188048e-16" y1="1.0000000000000002" x2="0.9999999999999998" y2="-4.440892098500626e-16"><stop offset="2.5%" style="stop-color:rgba(255,255,255,0.1)"/><stop offset="100%" style="stop-color:#FFFFFF"/></linearGradient></defs><path d="M 43 10 L 87 10 C 88.656 10 90 11.344 90 13 L 90 57 C 90 58.656 88.656 60 87 60 L 43 60 C 41.344 60 40 58.656 40 57 L 40 13 C 40 11.344 41.344 10 43 10 Z" style="stroke:none;fill:url(#_lgradient_4);stroke-miterlimit:10;"/><path d="M 43 10 L 87 10 C 88.656 10 90 11.344 90 13 L 90 57 C 90 58.656 88.656 60 87 60 L 43 60 C 41.344 60 40 58.656 40 57 L 40 13 C 40 11.344 41.344 10 43 10 Z" style="fill:none;stroke:#000000;stroke-width:2;stroke-linecap:square;stroke-miterlimit:2;"/><defs><linearGradient id="_lgradient_5" x1="0" y1="1" x2="1" y2="-4.440892098500626e-16"><stop offset="0%" style="stop-color:#FFFFFF"/><stop offset="100%" style="stop-color:rgba(255,255,255,0.43)"/></linearGradient></defs><path d="M 13.6 30 L 66.4 30 C 68.387 30 70 31.613 70 33.6 L 70 86.4 C 70 88.387 68.387 90 66.4 90 L 13.6 90 C 11.613 90 10 88.387 10 86.4 L 10 33.6 C 10 31.613 11.613 30 13.6 30 Z" style="stroke:none;fill:url(#_lgradient_5);stroke-miterlimit:10;"/><path d="M 13.6 30 L 66.4 30 C 68.387 30 70 31.613 70 33.6 L 70 86.4 C 70 88.387 68.387 90 66.4 90 L 13.6 90 C 11.613 90 10 88.387 10 86.4 L 10 33.6 C 10 31.613 11.613 30 13.6 30 Z" style="fill:none;stroke:#000000;stroke-width:2;stroke-linecap:square;stroke-miterlimit:2;"/><defs><filter id="F74DSDpwrY4BXvi3MtrloAnkmdQBbAU7" x="-200%" y="-200%" width="400%" height="400%" filterUnits="objectBoundingBox" color-interpolation-filters="sRGB"><feGaussianBlur xmlns="http://www.w3.org/2000/svg" stdDeviation="5.968116597346249"/></filter></defs><g filter="url(#F74DSDpwrY4BXvi3MtrloAnkmdQBbAU7)"><path d="M 39 25 L 71 25 C 73.208 25 75 26.792 75 29 L 75 61 C 75 63.208 73.208 65 71 65 L 39 65 C 36.792 65 35 63.208 35 61 L 35 29 C 35 26.792 36.792 25 39 25 Z" style="stroke:none;fill:#EBEBEB;stroke-miterlimit:10;opacity:0.5;"/></g></g>',
         spin: '<g><rect width="100" height="100" style="fill:rgb(0,0,0)" fill-opacity="0"/><defs><linearGradient id="_lgradient_10" x1="-3.885780586188048e-16" y1="1.0000000000000002" x2="0.9999999999999998" y2="-4.440892098500626e-16"><stop offset="2.5%" style="stop-color:rgba(255,255,255,0.69)"/><stop offset="100%" style="stop-color:#FFFFFF"/></linearGradient></defs><path d="M 43 10 L 87 10 C 88.656 10 90 11.344 90 13 L 90 57 C 90 58.656 88.656 60 87 60 L 43 60 C 41.344 60 40 58.656 40 57 L 40 13 C 40 11.344 41.344 10 43 10 Z" style="stroke:none;fill:url(#_lgradient_10);stroke-miterlimit:10;"/><path d="M 43 10 L 87 10 C 88.656 10 90 11.344 90 13 L 90 57 C 90 58.656 88.656 60 87 60 L 43 60 C 41.344 60 40 58.656 40 57 L 40 13 C 40 11.344 41.344 10 43 10 Z" style="fill:none;stroke:#000000;stroke-width:2;stroke-linecap:square;stroke-miterlimit:2;"/><defs><linearGradient id="_lgradient_11" x1="0" y1="1" x2="1" y2="-4.440892098500626e-16"><stop offset="0%" style="stop-color:#FFFFFF"/><stop offset="100%" style="stop-color:rgba(255,255,255,0.83)"/></linearGradient></defs><path d="M 35.472 18.152 L 81.2 44.554 C 82.921 45.547 83.511 47.751 82.518 49.472 L 56.116 95.2 C 55.123 96.921 52.919 97.511 51.198 96.518 L 5.47 70.116 C 3.749 69.123 3.159 66.919 4.152 65.198 L 30.554 19.47 C 31.547 17.749 33.751 17.159 35.472 18.152 Z" style="stroke:none;fill:url(#_lgradient_11);stroke-miterlimit:10;"/><path d="M 35.472 18.152 L 81.2 44.554 C 82.921 45.547 83.511 47.751 82.518 49.472 L 56.116 95.2 C 55.123 96.921 52.919 97.511 51.198 96.518 L 5.47 70.116 C 3.749 69.123 3.159 66.919 4.152 65.198 L 30.554 19.47 C 31.547 17.749 33.751 17.159 35.472 18.152 Z" style="fill:none;stroke:#000000;stroke-width:2;stroke-linecap:square;stroke-miterlimit:2;"/></g>',
         scale: '<g><rect width="100" height="100" style="fill:rgb(0,0,0)" fill-opacity="0"/><defs><linearGradient id="_lgradient_6" x1="-3.885780586188048e-16" y1="1.0000000000000002" x2="0.9999999999999998" y2="-4.440892098500626e-16"><stop offset="2.5%" style="stop-color:rgba(255,255,255,0.69)"/><stop offset="100%" style="stop-color:#FFFFFF"/></linearGradient></defs><path d="M 43 10 L 87 10 C 88.656 10 90 11.344 90 13 L 90 57 C 90 58.656 88.656 60 87 60 L 43 60 C 41.344 60 40 58.656 40 57 L 40 13 C 40 11.344 41.344 10 43 10 Z" style="stroke:none;fill:url(#_lgradient_6);stroke-miterlimit:10;"/><path d="M 43 10 L 87 10 C 88.656 10 90 11.344 90 13 L 90 57 C 90 58.656 88.656 60 87 60 L 43 60 C 41.344 60 40 58.656 40 57 L 40 13 C 40 11.344 41.344 10 43 10 Z" style="fill:none;stroke:#000000;stroke-width:2;stroke-linecap:square;stroke-miterlimit:2;"/><defs><linearGradient id="_lgradient_7" x1="0" y1="1" x2="1" y2="-4.440892098500626e-16"><stop offset="0%" style="stop-color:#FFFFFF"/><stop offset="100%" style="stop-color:rgba(255,255,255,0.83)"/></linearGradient></defs><path d="M 13.6 30 L 66.4 30 C 68.387 30 70 31.613 70 33.6 L 70 86.4 C 70 88.387 68.387 90 66.4 90 L 13.6 90 C 11.613 90 10 88.387 10 86.4 L 10 33.6 C 10 31.613 11.613 30 13.6 30 Z" style="stroke:none;fill:url(#_lgradient_7);stroke-miterlimit:10;"/><path d="M 13.6 30 L 66.4 30 C 68.387 30 70 31.613 70 33.6 L 70 86.4 C 70 88.387 68.387 90 66.4 90 L 13.6 90 C 11.613 90 10 88.387 10 86.4 L 10 33.6 C 10 31.613 11.613 30 13.6 30 Z" style="fill:none;stroke:#000000;stroke-width:2;stroke-linecap:square;stroke-miterlimit:2;"/><g><path d=" M 24.5 75.5 L 55.5 44.5 L 24.5 75.5 L 24.5 75.5 Z  M 55.5 44.5 L 55.5 56.5 L 55.5 44.5 L 55.5 44.5 Z  M 24.5 63.5 L 24.5 75.5 L 24.5 63.5 Z " fill-rule="evenodd" fill="none" vector-effect="non-scaling-stroke" stroke-width="3" stroke="rgb(0,0,0)" stroke-linejoin="miter" stroke-linecap="square" stroke-miterlimit="3"/><line x1="55.5" y1="44.5" x2="45" y2="44.5" vector-effect="non-scaling-stroke" stroke-width="3" stroke="rgb(0,0,0)" stroke-linejoin="miter" stroke-linecap="square" stroke-miterlimit="3"/><line x1="35" y1="75.5" x2="24.5" y2="75.5" vector-effect="non-scaling-stroke" stroke-width="3" stroke="rgb(0,0,0)" stroke-linejoin="miter" stroke-linecap="square" stroke-miterlimit="3"/></g></g>',
-        slide: '<g><rect width="100" height="100" style="fill:rgb(0,0,0)" fill-opacity="0"/><defs><linearGradient id="_lgradient_8" x1="-3.885780586188048e-16" y1="1.0000000000000002" x2="0.9999999999999998" y2="-4.440892098500626e-16"><stop offset="2.5%" style="stop-color:rgba(255,255,255,0.69)"/><stop offset="100%" style="stop-color:#FFFFFF"/></linearGradient></defs><path d="M 43 10 L 87 10 C 88.656 10 90 11.344 90 13 L 90 57 C 90 58.656 88.656 60 87 60 L 43 60 C 41.344 60 40 58.656 40 57 L 40 13 C 40 11.344 41.344 10 43 10 Z" style="stroke:none;fill:url(#_lgradient_8);stroke-miterlimit:10;"/><path d="M 43 10 L 87 10 C 88.656 10 90 11.344 90 13 L 90 57 C 90 58.656 88.656 60 87 60 L 43 60 C 41.344 60 40 58.656 40 57 L 40 13 C 40 11.344 41.344 10 43 10 Z" style="fill:none;stroke:#000000;stroke-width:2;stroke-linecap:square;stroke-miterlimit:2;"/><defs><linearGradient id="_lgradient_9" x1="0" y1="1" x2="1" y2="-4.440892098500626e-16"><stop offset="0%" style="stop-color:#FFFFFF"/><stop offset="100%" style="stop-color:rgba(255,255,255,0.83)"/></linearGradient></defs><path d="M 13.6 30 L 66.4 30 C 68.387 30 70 31.613 70 33.6 L 70 86.4 C 70 88.387 68.387 90 66.4 90 L 13.6 90 C 11.613 90 10 88.387 10 86.4 L 10 33.6 C 10 31.613 11.613 30 13.6 30 Z" style="stroke:none;fill:url(#_lgradient_9);stroke-miterlimit:10;"/><path d="M 13.6 30 L 66.4 30 C 68.387 30 70 31.613 70 33.6 L 70 86.4 C 70 88.387 68.387 90 66.4 90 L 13.6 90 C 11.613 90 10 88.387 10 86.4 L 10 33.6 C 10 31.613 11.613 30 13.6 30 Z" style="fill:none;stroke:#000000;stroke-width:2;stroke-linecap:square;stroke-miterlimit:2;"/><g><path d=" M 24.5 75.5 L 55.5 44.5 L 24.5 75.5 Z  M 55.5 44.5 L 55.5 56.5 L 55.5 44.5 Z " fill-rule="evenodd" fill="none" vector-effect="non-scaling-stroke" stroke-width="3" stroke="rgb(0,0,0)" stroke-linejoin="miter" stroke-linecap="square" stroke-miterlimit="3"/><line x1="55.5" y1="44.5" x2="45" y2="44.5" vector-effect="non-scaling-stroke" stroke-width="3" stroke="rgb(0,0,0)" stroke-linejoin="miter" stroke-linecap="square" stroke-miterlimit="3"/></g></g>'
+        slide: '<g><rect width="100" height="100" style="fill:rgb(0,0,0)" fill-opacity="0"/><defs><linearGradient id="_lgradient_8" x1="-3.885780586188048e-16" y1="1.0000000000000002" x2="0.9999999999999998" y2="-4.440892098500626e-16"><stop offset="2.5%" style="stop-color:rgba(255,255,255,0.69)"/><stop offset="100%" style="stop-color:#FFFFFF"/></linearGradient></defs><path d="M 43 10 L 87 10 C 88.656 10 90 11.344 90 13 L 90 57 C 90 58.656 88.656 60 87 60 L 43 60 C 41.344 60 40 58.656 40 57 L 40 13 C 40 11.344 41.344 10 43 10 Z" style="stroke:none;fill:url(#_lgradient_8);stroke-miterlimit:10;"/><path d="M 43 10 L 87 10 C 88.656 10 90 11.344 90 13 L 90 57 C 90 58.656 88.656 60 87 60 L 43 60 C 41.344 60 40 58.656 40 57 L 40 13 C 40 11.344 41.344 10 43 10 Z" style="fill:none;stroke:#000000;stroke-width:2;stroke-linecap:square;stroke-miterlimit:2;"/><defs><linearGradient id="_lgradient_9" x1="0" y1="1" x2="1" y2="-4.440892098500626e-16"><stop offset="0%" style="stop-color:#FFFFFF"/><stop offset="100%" style="stop-color:rgba(255,255,255,0.83)"/></linearGradient></defs><path d="M 13.6 30 L 66.4 30 C 68.387 30 70 31.613 70 33.6 L 70 86.4 C 70 88.387 68.387 90 66.4 90 L 13.6 90 C 11.613 90 10 88.387 10 86.4 L 10 33.6 C 10 31.613 11.613 30 13.6 30 Z" style="stroke:none;fill:url(#_lgradient_9);stroke-miterlimit:10;"/><path d="M 13.6 30 L 66.4 30 C 68.387 30 70 31.613 70 33.6 L 70 86.4 C 70 88.387 68.387 90 66.4 90 L 13.6 90 C 11.613 90 10 88.387 10 86.4 L 10 33.6 C 10 31.613 11.613 30 13.6 30 Z" style="fill:none;stroke:#000000;stroke-width:2;stroke-linecap:square;stroke-miterlimit:2;"/><g><path d=" M 24.5 75.5 L 55.5 44.5 L 24.5 75.5 Z  M 55.5 44.5 L 55.5 56.5 L 55.5 44.5 Z " fill-rule="evenodd" fill="none" vector-effect="non-scaling-stroke" stroke-width="3" stroke="rgb(0,0,0)" stroke-linejoin="miter" stroke-linecap="square" stroke-miterlimit="3"/><line x1="55.5" y1="44.5" x2="45" y2="44.5" vector-effect="non-scaling-stroke" stroke-width="3" stroke="rgb(0,0,0)" stroke-linejoin="miter" stroke-linecap="square" stroke-miterlimit="3"/></g></g>',
+        hero: '<g><rect width="100" height="100" style="fill:rgb(0,0,0)" fill-opacity="0"/><path d="M 13.6 60 L 46.4 60 C 48.387 60 50 61.613 50 63.6 L 50 86.4 C 50 88.387 48.387 90 46.4 90 L 13.6 90 C 11.613 90 10 88.387 10 86.4 L 10 63.6 C 10 61.613 11.613 60 13.6 60 Z" style="stroke:none;fill:#FFFFFF;fill-opacity:0.5;stroke-miterlimit:10;"/><path d="M 13.6 60 L 46.4 60 C 48.387 60 50 61.613 50 63.6 L 50 86.4 C 50 88.387 48.387 90 46.4 90 L 13.6 90 C 11.613 90 10 88.387 10 86.4 L 10 63.6 C 10 61.613 11.613 60 13.6 60 Z" style="fill:none;stroke:#000000;stroke-width:2;stroke-dasharray:3,3;stroke-linecap:square;stroke-miterlimit:2;"/><path d="M 53 10 L 87 10 C 88.656 10 90 11.344 90 13 L 90 47 C 90 48.656 88.656 50 87 50 L 53 50 C 51.344 50 50 48.656 50 47 L 50 13 C 50 11.344 51.344 10 53 10 Z" style="stroke:none;fill:#FFFFFF;stroke-miterlimit:10;"/><path d="M 53 10 L 87 10 C 88.656 10 90 11.344 90 13 L 90 47 C 90 48.656 88.656 50 87 50 L 53 50 C 51.344 50 50 48.656 50 47 L 50 13 C 50 11.344 51.344 10 53 10 Z" style="fill:none;stroke:#000000;stroke-width:2;stroke-linecap:square;stroke-miterlimit:2;"/><path d="M 32 62 L 65 33" vector-effect="non-scaling-stroke" stroke-width="2.5" stroke="rgb(0,0,0)" stroke-linecap="round" fill="none"/><path d="M 65 33 L 57 34.5 M 65 33 L 63.5 41" vector-effect="non-scaling-stroke" stroke-width="2.5" stroke="rgb(0,0,0)" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g>',
+        stinger: '<g><rect width="100" height="100" style="fill:rgb(0,0,0)" fill-opacity="0"/><path d="M 12 15 L 88 15 C 90.209 15 92 16.791 92 19 L 92 81 C 92 83.209 90.209 85 88 85 L 12 85 C 9.791 85 8 83.209 8 81 L 8 19 C 8 16.791 9.791 15 12 15 Z" style="stroke:none;fill:#000000;stroke-miterlimit:10;"/><path d="M 12 15 L 88 15 C 90.209 15 92 16.791 92 19 L 92 81 C 92 83.209 90.209 85 88 85 L 12 85 C 9.791 85 8 83.209 8 81 L 8 19 C 8 16.791 9.791 15 12 15 Z" style="fill:none;stroke:#000000;stroke-width:2;stroke-linecap:square;stroke-miterlimit:2;"/><path d="M 40 33 L 66 50 L 40 67 Z" style="stroke:#FFFFFF;stroke-width:2;stroke-linejoin:round;fill:#FFFFFF;"/></g>'
     }
 
     // UPDATE
 
-    function changeTransition(id: TransitionTypes, key: "type" | "duration" | "easing" | "fadeInOffset" | "custom", value: any, reset = false) {
+    function changeTransition(id: TransitionTypes, key: "type" | "duration" | "easing" | "fadeInOffset" | "custom" | "stinger", value: any, reset = false) {
         if (key === "duration") value = Number(value)
 
         if ($popupData.trigger) {
@@ -112,7 +115,16 @@
 
     // let updated: string[] = []
     // let updatedTimeout: NodeJS.Timeout | null = null
-    function updateSpecific(data: Transition, key: "type" | "duration" | "easing" | "fadeInOffset" | "custom", value: any, reset = false) {
+    function updateSpecific(data: Transition, key: "type" | "duration" | "easing" | "fadeInOffset" | "custom" | "stinger", value: any, reset = false) {
+        // stinger is a whole-slide cut (the output only knows the incoming slide), so in/out/between overrides don't apply -
+        // always store it (and whatever replaces it) at the top level, migrating any stinger previously set on an override
+        const stingerSource = [data, data.between, data.in, data.out].find((a) => a?.type === "stinger")
+        if (stingerSource || (key === "type" && value === "stinger")) {
+            const merged: Transition = { ...data, type: "stinger", stinger: data.stinger || stingerSource?.stinger, [key]: value }
+            SPECIFIC_SCENARIOS.forEach((a) => delete merged[a])
+            return merged
+        }
+
         if (!enableSpecific) {
             return { ...data, [key]: value }
         }
@@ -281,6 +293,13 @@
     $: correctedSlideDirection = getCorrectedDirection(slideDirection, selectedSpecific)
 
     let showMore = false
+
+    // hide hero/stinger behind "more options" - stinger is a fullscreen video cut so it doesn't make sense per-item
+    $: visibleTransitionTypes = transitionTypes.filter((type) => {
+        if (type.advanced && !showMore) return false
+        if (type.id === "stinger" && isItem) return false
+        return true
+    })
 </script>
 
 <MaterialButton class="popup-options {showMore ? 'active' : ''}" icon="options" iconSize={1.3} title={showMore ? "actions.close" : "create_show.more_options"} on:click={() => (showMore = !showMore)} white />
@@ -296,18 +315,20 @@
 
 <!-- SPECIFIC -->
 
-{#if enableSpecific}
-    <Tabs tabs={selectedType === "media" ? specificTabsMedia : specificTabs} bind:active={selectedSpecific} style="font-weight: normal;" />
-{:else if showMore}
-    <MaterialButton variant="outlined" style="font-weight: normal;" on:click={() => (enableSpecific = true)}>
-        <T id="transition.specific" />
-    </MaterialButton>
+{#if currentTransition.type !== "stinger"}
+    {#if enableSpecific}
+        <Tabs tabs={selectedType === "media" ? specificTabsMedia : specificTabs} bind:active={selectedSpecific} style="font-weight: normal;" />
+    {:else if showMore}
+        <MaterialButton variant="outlined" style="font-weight: normal;" on:click={() => (enableSpecific = true)}>
+            <T id="transition.specific" />
+        </MaterialButton>
+    {/if}
 {/if}
 
 <!-- TYPE -->
 
 <div class="types">
-    {#each transitionTypes as type}
+    {#each visibleTransitionTypes as type}
         {@const isActive = type.id === currentTransition.type}
         <MaterialButton showOutline={isActive} {isActive} style={type.id === "none" ? "font-style: italic;" : ""} on:click={() => changeTransition(selectedType, "type", type.id)}>
             <svg viewBox="0 0 100 100" width="{iconSize}pt" height="{iconSize}pt">
@@ -322,12 +343,18 @@
     <MaterialDropdown label="transition.direction" style="margin-bottom: 10px;" options={slideTypes} value={correctedSlideDirection} on:change={(e) => changeTransition(selectedType, "custom", { ...(currentTransition.custom || {}), direction: getCorrectedDirection(e.detail) })} />
 {/if}
 
-<InputRow>
-    <!-- defaultValue={selectedType === "media" ? 0.8 : 0.5} -->
-    <MaterialNumberInput label="transition.duration" disabled={isDisabled} value={durationValue / 1000} max={20} step={0.1} on:change={(e) => changeTransition(selectedType, "duration", e.detail * 1000)} />
-    <!-- defaultValue="sine" -->
-    <MaterialDropdown label="transition.easing" disabled={isDisabled} options={easings.map((a) => ({ ...a, label: translateText(a.label) }))} value={easingValue} on:change={(e) => changeTransition(selectedType, "easing", e.detail)} />
-</InputRow>
+{#if currentTransition.type === "stinger"}
+    <!-- plays a fullscreen video and cuts to the new slide underneath it at the given time (like an OBS stinger transition) -->
+    <MaterialFilePicker label="transition.stinger_video" value={currentTransition.stinger?.path || ""} filter={{ name: "Video files", extensions: ["mp4", "webm", "mov", "mkv", "avi", "m4v"] }} allowEmpty on:change={(e) => changeTransition(selectedType, "stinger", { ...(currentTransition.stinger || {}), path: e.detail })} />
+    <MaterialNumberInput label="transition.cut_at" value={currentTransition.stinger?.cutTime ?? 0} defaultValue={0} min={0} max={60} step={0.1} on:change={(e) => changeTransition(selectedType, "stinger", { ...(currentTransition.stinger || {}), cutTime: e.detail })} />
+{:else}
+    <InputRow>
+        <!-- defaultValue={selectedType === "media" ? 0.8 : 0.5} -->
+        <MaterialNumberInput label="transition.duration" disabled={isDisabled} value={durationValue / 1000} max={20} step={0.1} on:change={(e) => changeTransition(selectedType, "duration", e.detail * 1000)} />
+        <!-- defaultValue="sine" -->
+        <MaterialDropdown label="transition.easing" disabled={isDisabled} options={easings.map((a) => ({ ...a, label: translateText(a.label) }))} value={easingValue} on:change={(e) => changeTransition(selectedType, "easing", e.detail)} />
+    </InputRow>
+{/if}
 
 {#if showMore && selectedType === "text"}
     <MaterialNumberInput label="transition.fade_in_offset (%)" disabled={isDisabled} value={currentTransition?.fadeInOffset ?? 50} defaultValue={50} max={100} step={10} on:change={(e) => changeTransition(selectedType, "fadeInOffset", e.detail)} />

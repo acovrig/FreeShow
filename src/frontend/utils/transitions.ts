@@ -9,14 +9,17 @@ import { transitionData } from "../stores"
 // export const crossfade = cfade({})
 // export const [send, receive] = crossfade
 
-export const transitionTypes: { id: TransitionType; name: string }[] = [
+export const transitionTypes: { id: TransitionType; name: string; advanced?: boolean }[] = [
     { id: "none", name: "transition.none" },
     { id: "fade", name: "transition.fade" },
     // { id: "crossfade", name: "transition.crossfade" },
     { id: "blur", name: "transition.blur" },
     { id: "spin", name: "transition.spin" },
     { id: "scale", name: "transition.scale" },
-    { id: "slide", name: "transition.slide" }
+    { id: "slide", name: "transition.slide" },
+    // advanced/hidden types - only shown when "more options" is enabled
+    { id: "hero", name: "transition.hero", advanced: true },
+    { id: "stinger", name: "transition.stinger", advanced: true }
 ]
 
 export const transitions: { [key in TransitionType]: any } = {
@@ -53,7 +56,25 @@ export const transitions: { [key in TransitionType]: any } = {
             // scale(${t})
             css: (t: any) => `opacity: ${t * o}; transform: rotate(${t * 360}deg);`
         }
-    }
+    },
+    // hero & stinger are handled outside of the normal in/out crossfade pipeline (item morphing / fullscreen video overlay)
+    // these are only reached as a fallback (e.g. no matching item found for hero, or an unsupported context) - fade instead
+    hero: (node, data) => fade(node, { ...data, duration: data?.duration || 500 }),
+    stinger: (node, data) => fade(node, { ...data, duration: data?.duration || 500 })
+}
+
+// rough CSS timing-function equivalents of the svelte easing functions above, for use with native CSS transitions (hero morph)
+const cssEasingMap: { [key: string]: string } = {
+    linear: "linear",
+    sine: "cubic-bezier(0.37, 0, 0.63, 1)",
+    back: "cubic-bezier(0.68, -0.6, 0.32, 1.6)",
+    circ: "cubic-bezier(0.85, 0, 0.15, 1)",
+    cubic: "cubic-bezier(0.65, 0, 0.35, 1)",
+    elastic: "cubic-bezier(0.68, -0.6, 0.32, 1.6)",
+    bounce: "cubic-bezier(0.34, 1.56, 0.64, 1)"
+}
+export function cssEasing(name = "sine"): string {
+    return cssEasingMap[name] || cssEasingMap.sine
 }
 
 export const easings: any[] = [

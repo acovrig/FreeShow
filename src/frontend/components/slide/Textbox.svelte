@@ -49,6 +49,7 @@
     }
     export let style = true
     export let customStyle = ""
+    export let transitionStyle = "" // hero transition - CSS "transition:" rule applied to the item's position/size while morphing
     export let stageItem: any = {}
     export let chords = false
     export let linesStart: null | number = null
@@ -801,7 +802,7 @@
 <!-- lyrics view must have "width: 100%;height: 100%;" set -->
 <div
     class="item"
-    style="{style ? getCustomStyle(getItemStyle(item?.style, isCroppedItem(item)), customOutputId, styleIdOverride, { $styles }) : 'width: 100%;height: 100%;'};{paddingCorrection}{foregroundFilters}{animationStyle.item || ''}{cssVariables}{fixedWidth}"
+    style="{style ? getCustomStyle(getItemStyle(item?.style, isCroppedItem(item)), customOutputId, styleIdOverride, { $styles }) : 'width: 100%;height: 100%;'};{paddingCorrection}{foregroundFilters}{animationStyle.item || ''}{cssVariables}{fixedWidth}{transitionStyle}"
     class:white={key && !lines?.length}
     class:key
     class:isStage

@@ -427,6 +427,7 @@ export interface Transition {
     fadeInOffset?: number // when to start fading in (default = 50%)
     delay?: number // item in/out wait
     custom?: any // e.g. transition direction
+    stinger?: { path?: string; cutTime?: number } // type: "stinger" - video file & when (seconds) the slide actually switches underneath it
 
     between?: TransitionData
     in?: TransitionData
@@ -438,6 +439,7 @@ export interface TransitionData {
     duration: number
     easing: string
     delay?: number // item in/out wait
+    stinger?: { path?: string; cutTime?: number }
 }
 
 export interface AnimationData {
@@ -677,5 +679,5 @@ export interface Tag {
 export type ID = string
 export type ItemType = "text" | "media" | "camera" | "timer" | "clock" | "button" | "events" | "weather" | "variable" | "web" | "qr_code" | "icon" | "slide_tracker" | "visualizer" | "captions" | "metronome" | "current_output" | "chart" | "table" // "shape" | "video"
 export type ShowType = "DIVIDER" | "show" | "image" | "video" | "audio" | "player" | "section" | "overlay" | "effect" | "pdf" | "ppt" | "screen" | "ndi" | "camera" | "folder" | "show_placeholder" // "private"
-export type TransitionType = "none" | "blur" | "fade" | "crossfade" | "fly" | "scale" | "slide" | "spin"
+export type TransitionType = "none" | "blur" | "fade" | "crossfade" | "fly" | "scale" | "slide" | "spin" | "hero" | "stinger"
 export type MediaType = "media" | "video" | "image" | "effect" | "screen" | "ndi" | "omt" | "camera" | "player" | "audio"
