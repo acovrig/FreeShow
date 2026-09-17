@@ -457,9 +457,14 @@ export async function triggerAction(data: API) {
     // API start at 1, code start at 0
     if (data.index !== undefined) data.index--
 
-    if (!API_ACTIONS[id]) return console.error("Missing API ACTION:", id)
-
     const returnId = data.returnId
+    if (!API_ACTIONS[id]) {
+        console.error("Missing API ACTION:", id)
+        // respond so a waiting client doesn't time out
+        if (returnId) sendMain(Main.API_TRIGGER, { ...data, returnId, data: { error: `Unknown action: ${String(id)}` } })
+        return
+    }
+
     delete data.returnId
     const returnData = await API_ACTIONS[id](data)
     if (!returnId || returnData === undefined) return

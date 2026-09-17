@@ -216,11 +216,14 @@ function convertToType(value: string) {
 
 // DATA
 
+// non "get_" actions that respond with data
+const RETURNING_ACTIONS = ["create_project", "set_project_item", "generate_scripture_show"]
+
 async function receivedData(data: any = {}, log: (...msg: any[]) => void): Promise<any> {
     if (!data?.action) return log("Received message from client, but missing 'action' key.", true)
     log(`Received action ${String(data.action)}`)
 
-    const get = data.action.startsWith("get_")
+    const get = data.action.startsWith("get_") || RETURNING_ACTIONS.includes(data.action)
     if (get) data.returnId = uid(5)
 
     sendToMain(ToMain.API_TRIGGER2, data)
